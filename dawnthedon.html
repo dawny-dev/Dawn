@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DAWNTHEDON</title>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --gold: #d4a853;
+      --gold2: #f0c97a;
+      --black: #080806;
+      --white: #f5f0e8;
+      --red: #c0392b;
+      --mono: 'DM Mono', monospace;
+      --display: 'Anton', sans-serif;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--mono);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── CURSOR ── */
+    #cur {
+      position: fixed;
+      width: 10px; height: 10px;
+      background: var(--gold);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%,-50%);
+      z-index: 9999;
+      transition: transform 0.06s;
+    }
+    #cur2 {
+      position: fixed;
+      width: 32px; height: 32px;
+      border: 1px solid var(--gold);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%,-50%);
+      z-index: 9998;
+      opacity: 0.4;
+      transition: left 0.14s ease, top 0.14s ease;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content:'';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.035;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 6vw;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* animated gold lines background */
+    #hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent,
+          transparent 80px,
+          rgba(212,168,83,0.03) 80px,
+          rgba(212,168,83,0.03) 81px
+        ),
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 80px,
+          rgba(212,168,83,0.03) 80px,
+          rgba(212,168,83,0.03) 81px
+        );
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: clamp(0.55rem, 1.2vw, 0.75rem);
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s ease forwards;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-name {
+      font-family: var(--display);
+      font-size: clamp(4.5rem, 16vw, 14rem);
+      line-height: 0.88;
+      letter-spacing: -0.01em;
+      color: var(--white);
+      position: relative;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.4s ease forwards;
+    }
+
+    /* gold outline ghost text behind */
+    .hero-name::before {
+      content: 'DAWNTHEDON';
+      position: absolute;
+      top: 6px; left: 6px;
+      -webkit-text-stroke: 1px var(--gold);
+      color: transparent;
+      pointer-events: none;
+      opacity: 0.18;
+    }
+
+    .hero-name .highlight {
+      color: var(--gold);
+      position: relative;
+      display: inline-block;
+    }
+    .hero-name .highlight::after {
+      content: '';
+      position: absolute;
+      bottom: 4px; left: 0; right: 0;
+      height: 3px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transform-origin: left;
+      animation: lineIn 0.6s 1.4s ease forwards;
+    }
+
+    .hero-sub {
+      margin-top: 2.5rem;
+      font-size: clamp(0.65rem, 1.4vw, 0.85rem);
+      letter-spacing: 0.12em;
+      color: var(--white);
+      opacity: 0;
+      animation: fadeUp 0.8s 0.8s ease forwards;
+      max-width: 420px;
+      line-height: 1.9;
+    }
+
+    .hero-sub span { color: var(--gold); }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 40px; left: 6vw;
+      font-size: 0.5rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0;
+      color: var(--gold);
+      animation: fadeUp 0.8s 1.4s ease forwards;
+    }
+    .scroll-hint::before {
+      content: '↓  ';
+      animation: bounce 1.4s infinite;
+      display: inline-block;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 28px 6vw;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 500;
+      mix-blend-mode: normal;
+    }
+    nav::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 6vw; right: 6vw;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: 0.2;
+    }
+    .nav-logo {
+      font-family: var(--display);
+      font-size: 1.1rem;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+    }
+    .nav-links {
+      display: flex; gap: 36px; list-style: none;
+    }
+    .nav-links a {
+      font-size: 0.55rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--white);
+      text-decoration: none;
+      opacity: 0.6;
+      transition: opacity 0.2s, color 0.2s;
+    }
+    .nav-links a:hover { opacity: 1; color: var(--gold); }
+
+    /* ── MARQUEE ── */
+    .marquee-wrap {
+      overflow: hidden;
+      border-top: 1px solid rgba(212,168,83,0.15);
+      border-bottom: 1px solid rgba(212,168,83,0.15);
+      padding: 18px 0;
+      background: rgba(212,168,83,0.04);
+    }
+    .marquee-track {
+      display: flex;
+      white-space: nowrap;
+      animation: marquee 18s linear infinite;
+    }
+    .marquee-item {
+      font-family: var(--display);
+      font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+      letter-spacing: 0.12em;
+      padding: 0 48px;
+      color: var(--gold);
+      opacity: 0.55;
+    }
+    .marquee-item.dim { color: var(--white); opacity: 0.12; }
+
+    /* ── SECTIONS ── */
+    section {
+      padding: 120px 6vw;
+    }
+
+    .section-label {
+      font-size: 0.5rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      max-width: 80px;
+      height: 1px;
+      background: var(--gold);
+      opacity: 0.4;
+    }
+
+    .section-title {
+      font-family: var(--display);
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      letter-spacing: 0.04em;
+      line-height: 1;
+      margin-bottom: 48px;
+    }
+
+    /* ── ABOUT ── */
+    #about {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    @media (max-width: 768px) { #about { grid-template-columns: 1fr; gap: 48px; } }
+
+    .about-text {
+      font-size: clamp(0.8rem, 1.5vw, 1rem);
+      line-height: 2;
+      opacity: 0.75;
+      letter-spacing: 0.02em;
+    }
+    .about-text strong { color: var(--gold); font-style: italic; font-weight: 300; }
+
+    .about-right {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(245,240,232,0.07);
+    }
+    .stat-row:first-child { border-top: 1px solid rgba(245,240,232,0.07); }
+    .stat-num {
+      font-family: var(--display);
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      color: var(--gold);
+      letter-spacing: 0.04em;
+    }
+    .stat-desc {
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.45;
+      text-align: right;
+    }
+
+    /* ── WORK / CARDS ── */
+    #work { background: rgba(212,168,83,0.02); }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2px;
+    }
+
+    .card {
+      position: relative;
+      aspect-ratio: 3/4;
+      background: #0f0f0c;
+      overflow: hidden;
+      cursor: pointer;
+      group: true;
+    }
+
+    .card-bg {
+      position: absolute;
+      inset: 0;
+      transition: transform 0.6s cubic-bezier(.16,1,.3,1);
+    }
+    .card:hover .card-bg { transform: scale(1.06); }
+
+    .card-bg-1 { background: linear-gradient(135deg, #1a1206 0%, #2d1f08 50%, #0d0d0a 100%); }
+    .card-bg-2 { background: linear-gradient(135deg, #0d0a14 0%, #1a0a12 50%, #080606 100%); }
+    .card-bg-3 { background: linear-gradient(135deg, #080d0a 0%, #0a1a10 50%, #060808 100%); }
+
+    /* geometric card art */
+    .card-art {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--display);
+      font-size: clamp(4rem, 8vw, 7rem);
+      opacity: 0.07;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+      transition: opacity 0.4s;
+    }
+    .card:hover .card-art { opacity: 0.14; }
+
+    .card-content {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 28px;
+      background: linear-gradient(to top, rgba(8,8,6,0.95) 0%, transparent 100%);
+      transform: translateY(8px);
+      transition: transform 0.4s ease;
+    }
+    .card:hover .card-content { transform: translateY(0); }
+
+    .card-tag {
+      font-size: 0.48rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+    .card-title {
+      font-family: var(--display);
+      font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+      letter-spacing: 0.06em;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+    .card-desc {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      opacity: 0.5;
+      line-height: 1.7;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+    .card:hover .card-desc { max-height: 80px; }
+
+    /* ── CONTACT ── */
+    #contact {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 48px;
+    }
+
+    #contact .section-label { justify-content: center; }
+    #contact .section-label::after { display: none; }
+
+    .contact-headline {
+      font-family: var(--display);
+      font-size: clamp(3rem, 10vw, 9rem);
+      letter-spacing: 0.04em;
+      line-height: 0.9;
+      color: var(--white);
+      position: relative;
+    }
+    .contact-headline em {
+      color: var(--gold);
+      font-style: normal;
+      display: block;
+    }
+
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--gold);
+      color: var(--black);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 18px 40px;
+      transition: background 0.2s, transform 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+    .cta-btn:hover { background: var(--gold2); transform: translateY(-2px); }
+    .cta-btn .arrow { font-size: 1rem; }
+
+    .social-row {
+      display: flex; gap: 32px;
+    }
+    .social-link {
+      font-size: 0.5rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--white);
+      text-decoration: none;
+      opacity: 0.35;
+      transition: opacity 0.2s, color 0.2s;
+    }
+    .social-link:hover { opacity: 1; color: var(--gold); }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 40px 6vw;
+      border-top: 1px solid rgba(212,168,83,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.48rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.3;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes lineIn {
+      to { transform: scaleX(1); }
+    }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(5px); }
+    }
+
+    /* scroll reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* glitch effect on hover of name */
+    .hero-name:hover { animation: glitch 0.3s ease; }
+    @keyframes glitch {
+      0%  { clip-path: none; transform: none; }
+      20% { clip-path: inset(20% 0 60% 0); transform: translate(-4px, 0); }
+      40% { clip-path: inset(60% 0 10% 0); transform: translate(4px, 0); }
+      60% { clip-path: none; transform: translate(-2px, 0); }
+      80% { clip-path: inset(10% 0 80% 0); transform: translate(2px, 0); }
+      100%{ clip-path: none; transform: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur2"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">DTD</div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#work">Work</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-eyebrow">Est. here. Now. Forever.</div>
+  <h1 class="hero-name">DAWN<br>THE<span class="highlight">DON</span></h1>
+  <p class="hero-sub">
+    Creative. Engineer. Visionary.<br>
+    <span>Code meets art</span> — built different, moving different.
+  </p>
+  <div class="scroll-hint">Scroll to explore</div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="marquee-item">DAWNTHEDON</span>
+    <span class="marquee-item dim">✦</span>
+    <span class="marquee-item">CREATIVE</span>
+    <span class="marquee-item dim">✦</span>
+    <span class="marquee-item">ENGINEER</span>
+    <span class="marquee-item dim">✦</span>
+    <span class="marquee-item">VISIONARY</span>
+    <span class="marquee-item dim">✦</span>
+    <span class="marquee-item">DAWNTHEDON</span>
+    <span class="marquee-item dim">✦</span>
+    <span class="marquee-item">CREATIVE</span>
+    <span class="marquee-item dim">✦</span>
+    <span class="marquee-item">ENGINEER</span>
+    <span class="marquee-item dim">✦</span>
+    <span class="marquee-item">VISIONARY</span>
+    <span class="marquee-item dim">✦</span>
+    <!-- duplicate for seamless loop -->
+    <span class="marquee-item">DAWNTHEDON</span>
+    <span class="marquee-item dim">✦</span>
+    <span class="marquee-item">CREATIVE</span>
+    <span class="marquee-item dim">✦</span>
+    <span class="marquee-item">ENGINEER</span>
+    <span class="marquee-item dim">✦</span>
+    <span class="marquee-item">VISIONARY</span>
+    <span class="marquee-item dim">✦</span>
+    <span class="marquee-item">DAWNTHEDON</span>
+    <span class="marquee-item dim">✦</span>
+    <span class="marquee-item">CREATIVE</span>
+    <span class="marquee-item dim">✦</span>
+    <span class="marquee-item">ENGINEER</span>
+    <span class="marquee-item dim">✦</span>
+    <span class="marquee-item">VISIONARY</span>
+    <span class="marquee-item dim">✦</span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section>
+  <div id="about" class="reveal">
+    <div>
+      <div class="section-label">001 — About</div>
+      <h2 class="section-title">THE STORY<br>SO FAR</h2>
+      <p class="about-text">
+        I'm <strong>Dawn</strong> — a builder at the intersection of
+        technology and creative vision. From <strong>engineering circuits</strong>
+        to crafting animated worlds, I approach every project like it's
+        a statement.<br><br>
+        Not just making things that work —
+        making things that <strong>hit different</strong>.
+      </p>
+    </div>
+    <div class="about-right">
+      <div class="stat-row">
+        <span class="stat-num">∞</span>
+        <span class="stat-desc">Ideas in progress</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-num">01</span>
+        <span class="stat-desc">Of a kind</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-num">24</span>
+        <span class="stat-desc">Hours dedicated</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-num">0</span>
+        <span class="stat-desc">Limits accepted</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORK -->
+<section id="work">
+  <div class="section-label reveal">002 — Work</div>
+  <h2 class="section-title reveal">SELECTED<br>PROJECTS</h2>
+  <div class="cards reveal">
+    <div class="card">
+      <div class="card-bg card-bg-1"></div>
+      <div class="card-art">01</div>
+      <div class="card-content">
+        <div class="card-tag">Engineering</div>
+        <div class="card-title">CIRCUITS &<br>SYSTEMS</div>
+        <div class="card-desc">Analog & digital electronics — where logic meets the physical world.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-bg card-bg-2"></div>
+      <div class="card-art">02</div>
+      <div class="card-content">
+        <div class="card-tag">Creative Code</div>
+        <div class="card-title">MOTION &<br>ANIMATION</div>
+        <div class="card-desc">Bringing ideas to life through code — Manim, Canvas, and beyond.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-bg card-bg-3"></div>
+      <div class="card-art">03</div>
+      <div class="card-content">
+        <div class="card-tag">Mathematics</div>
+        <div class="card-title">LINEAR<br>ALGEBRA</div>
+        <div class="card-desc">Vectors, spaces, transformations — the language underneath everything.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-label reveal">003 — Contact</div>
+  <div class="contact-headline reveal">
+    LET'S<br><em>CONNECT.</em>
+  </div>
+  <a class="cta-btn reveal" href="mailto:hello@dawnthedon.com">
+    Get in touch <span class="arrow">→</span>
+  </a>
+  <div class="social-row reveal">
+    <a class="social-link" href="#">Twitter</a>
+    <a class="social-link" href="#">Instagram</a>
+    <a class="social-link" href="#">GitHub</a>
+    <a class="social-link" href="#">LinkedIn</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>© 2026 Dawnthedon</span>
+  <span>Built from scratch</span>
+  <span>All rights reserved</span>
+</footer>
+
+<script>
+  // cursor
+  const cur = document.getElementById('cur');
+  const cur2 = document.getElementById('cur2');
+  document.addEventListener('mousemove', e => {
+    cur.style.left  = e.clientX + 'px';
+    cur.style.top   = e.clientY + 'px';
+    setTimeout(() => {
+      cur2.style.left = e.clientX + 'px';
+      cur2.style.top  = e.clientY + 'px';
+    }, 80);
+  });
+
+  // scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
